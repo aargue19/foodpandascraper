@@ -16,6 +16,10 @@
 
 import pandas as pd
 
-rest_links_list = pd.read_csv("test_links.csv")
+# rest_links_list = pd.read_csv("./links/tw_links.csv")
 
-print(rest_links_list)
+df = pd.DataFrame({'links': ['f5ek/liu-dian-zhong-yang-sheng-dun-tang']})
+
+
+for i in df['links']:
+    print(str(i))

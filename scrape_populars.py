@@ -24,12 +24,11 @@ chrome_options.add_argument("user-data-dir=C://Users/gaoan/AppData/Local/Google/
 
 driver = webdriver.Chrome(options=chrome_options)
 
-
-# JUST SCRAPE ONE MENU FOR NOW:
-# current_rest_link = "https://www.foodpanda.com.tw/en/restaurant/z7jm/da-hao-niu-pai-gao-xiong-re-he-dian"
-
 # iterate through list of restaurant pages stored in "test_links.csv"
-rest_links_list = pd.read_csv("test_links.csv")
+# rest_links_list = pd.read_csv("test_links.csv")
+rest_links_list = pd.read_csv("./links/tw_links.csv")
+
+# rest_links_list = pd.DataFrame({'links': ['f5ek/liu-dian-zhong-yang-sheng-dun-tang']})
 
 for current_rest_link in rest_links_list['links']:
     
@@ -128,63 +127,62 @@ for current_rest_link in rest_links_list['links']:
 
         elem = dish_cat_sections[0]
 
-        button_count = elem.find_elements_by_tag_name('button')                                                 # (keep all with more than one button)
-        if len(button_count) > 1:
-            dish_cats_list.append(elem.find_elements_by_class_name("dish-category-title")[0].text)
+        print(elem) 
+        
+        # get all menu items
+        dish_info = elem.find_elements_by_class_name("dish-info-container")
 
-
-            # get all menu items
-            dish_info = elem.find_elements_by_class_name("dish-info")
-            for dish in dish_info:
-                temp_menu_items = dish.find_elements_by_tag_name('span')
+        for dish in dish_info:
             
-                for item in temp_menu_items:
-                    full_menu_items_list.append(item.text)
+            # get dish names
+            temp_menu_items = dish.find_elements_by_tag_name('span')
+        
+            for item in temp_menu_items:
+                full_menu_items_list.append(item.text)
 
+            # check if it has a picture
+            temp_pic = dish.find_elements_by_tag_name('picture')
+
+            if len(temp_pic) > 0:
+                full_pic_list.append("1")
+            else:
+                full_pic_list.append("0")
+
+        price_info = elem.find_elements_by_class_name("price-tags-container")
+
+        for price in price_info:
+            
             # get all original prices
-            price_info = elem.find_elements_by_class_name("price-tags-container")
-            for price in price_info:
-                temp_prices = price.find_elements_by_class_name('p-price')
-
-                for item in temp_prices:
-                    full_prices_list.append(item.text)
+            temp_prices = price.find_elements_by_class_name('p-price')
+            for item in temp_prices:
+                full_prices_list.append(item.text)
 
             # get all discount prices
-            for price in price_info:
-                temp_discs = price.find_elements_by_class_name('price-discount')
+            temp_discs = price.find_elements_by_class_name('price-discount')
+            for item in temp_discs:
+                full_discounts_list.append(item.text)
 
-                for item in temp_discs:
-                    full_discounts_list.append(item.text)
+        print(full_menu_items_list)
+        print(len(full_menu_items_list))
+        print(full_prices_list)
+        print(len(full_prices_list))
+        print(full_discounts_list)
+        print(len(full_discounts_list))
+        print(full_pic_list)
+        print(len(full_pic_list))
 
-            # haz picture?
-            dish_info = elem.find_elements_by_class_name("dish-info-container")
-            for dish in dish_info:
-                temp_pic = dish.find_elements_by_tag_name('picture')
+        #if there were less than 6 items in the popular menu fill the rest of info with NA
 
-                if len(temp_pic) > 0:
-                    full_pic_list.append("1")
-                else:
-                    full_pic_list.append("0")
+        if len(full_menu_items_list) < 6:
+            diff_len = 6 - len(full_menu_items_list)
+            for i in range(diff_len):
+                full_menu_items_list.append("NA") 
+                full_prices_list.append("NA") 
+                full_discounts_list.append("NA") 
+                full_pic_list.append("NA") 
 
-            # print(full_menu_items_list)
-            # print(len(full_menu_items_list))
-            # print(full_prices_list)
-            # print(len(full_prices_list))
-            # print(full_discounts_list)
-            # print(len(full_discounts_list))
-            # print(full_pic_list)
-            # print(len(full_pic_list))
-
-            if len(full_menu_items_list) < 6:
-                diff_len = 6 - len(full_menu_items_list)
-                for i in range(diff_len):
-                    full_menu_items_list.append("NA") 
-                    full_prices_list.append("NA") 
-                    full_discounts_list.append("NA") 
-                    full_pic_list.append("NA") 
-
-            if len(full_discounts_list) == 0:
-                full_discounts_list = ["NA","NA","NA","NA","NA","NA"]
+        if len(full_discounts_list) == 0:
+            full_discounts_list = ["NA","NA","NA","NA","NA","NA"]
 
         print(full_menu_items_list)
         print(full_prices_list)
@@ -227,7 +225,7 @@ for current_rest_link in rest_links_list['links']:
                                                     'full_discounts_list',
                                                     'full_pic_list'])
 
-        df.to_csv('existing.csv', mode='a', index=False, header=False, encoding="utf-8")
+        df.to_csv('tw_menus.csv', mode='a', index=False, header=False, encoding="utf-8")
     
     except Exception as e:
         print(e)
